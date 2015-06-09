@@ -11,13 +11,14 @@ from maui.backend import context
 from visitor import ParallelVisitInstrumentation, VisitInstrumentation
 from .adapter import InSituDataAdapter
 
-logger = logging.getLogger(__name__)
 
 class MauiInSitu(object):
 
     def __init__(self, fields, identifier, *args, **kwargs):
 
-        logger.debug("Instantiating InSitu Visualization")
+        self.logger = logging.getLogger(__name__)
+        self.logger.debug("Instantiating InSitu Visualization")
+
         description = "Maui Framework In-Situ Visualization."
 
         if hasattr(context, 'comm'):

@@ -12,7 +12,6 @@ from visitor import VISIT_VARTYPE_VECTOR, VISIT_VARTYPE_SCALAR, VISIT_VARTYPE_TE
     VISIT_VARCENTERING_NODE, VISIT_MESHTYPE_RECTILINEAR
 
 
-logger = logging.getLogger(__name__)
 var_type_map = {TensorField: VISIT_VARTYPE_TENSOR, VectorField: VISIT_VARTYPE_VECTOR, ScalarField: VISIT_VARTYPE_SCALAR}
 axes_letters = ['x', 'y', 'z']
 
@@ -20,20 +19,23 @@ axes_letters = ['x', 'y', 'z']
 class MeshDataProvider(object):
 
     def __init__(self, mesh):
+        self.logger = logging.getLogger(__name__)
         self.__mesh = mesh
 
     def __call__(self, *args, **kwargs):
-        logger.debug("Providing data for mesh.")
+        self.logger.debug("Providing data for mesh.")
         return tuple(self.__mesh.axes)
 
 
 class VarDataProvider(object):
 
     def __init__(self, data):
+        self.logger = logging.getLogger(__name__)
+        self.logger.debug(type(data))
         self.__data = data
 
     def __call__(self, *args, **kwargs):
-        logger.debug("Providing data for variable.")
+        self.logger.debug("Providing data for variable.")
         return self.__data
 
 
@@ -41,8 +43,7 @@ class InSituDataAdapter(object):
 
     def __init__(self, fields):
 
-        # TODO: Support for multiple domains per processor.
-        # TODO: Label, Units und weitere Metadaten nachziehen.
+        self.logger = logging.getLogger(__name__)
 
         self.__fields = fields
         self.__variables = dict()
