@@ -30,32 +30,44 @@ class MauiInSitu(object):
 
         self.__data_adapter = InSituDataAdapter(fields)
 
-        for name in self.__data_adapter.meshes.keys():
+        for name in self.__data_adapter.meshes:
             mesh_type = self.__data_adapter.meshes[name]['mesh_type']
-            data_provider = self.__data_adapter.meshes[name]['data_provider']
             dimension = self.__data_adapter.meshes[name]['dimension']
 
             mesh_kwargs = dict()
             try:
                 mesh_kwargs = self.__data_adapter.meshes[name]['kwargs']
             except KeyError:
-                logger.info("No metadata provided for mesh %s!" % name)
+                self.logger.warn("No metadata provided for mesh %s!" % name)
 
-            self.__instrumentation.register_mesh(name, data_provider, mesh_type, dimension, **mesh_kwargs)
+            if isinstance(self.__data_adapter.meshes[name]['domain_number'], dict):
+                for key in self.__data_adapter.meshes[name]['domain_number']:
+                    domain = self.__data_adapter.meshes[name]['domain_number'][key]
+                    dp = self.__data_adapter.meshes[name]['data_provider'][key]
+                    self.__instrumentation.register_mesh(name, dp, mesh_type, dimension, domain=domain, number_of_domains=self.__data_adapter.meshes[name]['number_of_domains'], **mesh_kwargs)
+            else:
+                self.__instrumentation.register_mesh(name, None, mesh_type, dimension, domain='omit', number_of_domains=self.__data_adapter.meshes[name]['number_of_domains'], **mesh_kwargs)
 
-        for name in self.__data_adapter.variables.keys():
+        for name in self.__data_adapter.variables:
+            self.logger.debug(name)
             var_type = self.__data_adapter.variables[name]['var_type']
-            data_provider = self.__data_adapter.variables[name]['data_provider']
             var_centering = self.__data_adapter.variables[name]['centering']
             mesh_name = self.__data_adapter.variables[name]['mesh_name']
 
             var_kwargs = dict()
+
             try:
                 var_kwargs = self.__data_adapter.variables[name]['kwargs']
             except KeyError:
-                logger.info("No metadata provided for variable %s!" % name)
+                self.logger.warn("No metadata provided for variable %s!" % name)
 
-            self.__instrumentation.register_variable(name, mesh_name, data_provider, var_type, var_centering, **var_kwargs)
+            if isinstance(self.__data_adapter.variables[name]['domain_number'], dict):
+                for key in self.__data_adapter.variables[name]['domain_number']:
+                    domain = self.__data_adapter.variables[name]['domain_number'][key]
+                    dp = self.__data_adapter.variables[name]['data_provider'][key]
+                    self.__instrumentation.register_variable(name, mesh_name, dp, var_type, var_centering, domain=domain, **var_kwargs)
+            else:
+                self.__instrumentation.register_variable(name, mesh_name, None, var_type, var_centering, domain='omit', **var_kwargs)
 
     def register_curve(self, name, data_provider):
         self.__instrumentation.register_curve(name, data_provider)

@@ -51,23 +51,28 @@ class InSituDataAdapter(object):
 
         for field in fields:
 
-            if len(field.d) > 1:
-                logger.error("Currently InSitu only provides support for 1 domain per processor.")
-                raise ValueError("Currently InSitu only provides support for 1 domain per processor.")
-
             if not isinstance(field.partition.mesh, RectilinearMesh):
-                logger.error("Currently only fields associated with a rectilinear mesh are supported: %s !" % field.name)
+                self.logger.error("Currently only fields associated with a rectilinear mesh are supported: %s !" % field.name)
                 raise TypeError("Currently only fields associated with a rectilinear mesh are supported: %s !" % field.name)
 
             mesh_name = field.name + "_mesh"
             self.__meshes[mesh_name] = dict()
             self.__meshes[mesh_name]['mesh_type'] = VISIT_MESHTYPE_RECTILINEAR
 
-            for key in field.d:
-                logger.debug("Mesh for domain: %s" % str(key))
-                self.__meshes[mesh_name]['data_provider'] = MeshDataProvider(field.partition.domains[key].mesh)
-            self.__meshes[mesh_name]['dimension'] = field.partition.mesh.dimension
+            self.__meshes[mesh_name]['domain_number'] = 'omit'
 
+            if len(field.d) > 0:
+                self.__meshes[mesh_name]['data_provider'] = dict()
+                self.__meshes[mesh_name]['domain_number'] = dict()
+
+            self.__meshes[mesh_name]['number_of_domains'] = len(field.partition.domains)
+
+            for key in field.d:
+                self.logger.debug("Mesh for domain: %s" % str(key))
+                self.__meshes[mesh_name]['domain_number'][key] = field.partition.domain_numbers[key]
+                self.__meshes[mesh_name]['data_provider'][key] = MeshDataProvider(field.partition.domains[key].mesh)
+
+            self.__meshes[mesh_name]['dimension'] = field.partition.mesh.dimension
             self.__meshes[mesh_name]['kwargs'] = dict()
 
             for i in range(field.partition.mesh.dimension):
@@ -75,6 +80,12 @@ class InSituDataAdapter(object):
                 self.__meshes[mesh_name]['kwargs'][axes_letters[i]+'units'] = field.partition.mesh.unit
 
             self.__variables[field.name] = dict()
+            self.__variables[field.name]['domain_number'] = 'omit'
+
+            if len(field.d) > 0:
+                self.__variables[field.name]['data_provider'] = dict()
+                self.__variables[field.name]['domain_number'] = dict()
+
             self.__variables[field.name]['mesh_name'] = mesh_name
             self.__variables[field.name]['var_type'] = var_type_map[type(field)]
             self.__variables[field.name]['centering'] = VISIT_VARCENTERING_NODE
@@ -83,8 +94,9 @@ class InSituDataAdapter(object):
             self.__variables[field.name]['kwargs']['units'] = field.unit
 
             for key in field.d:
-                logger.debug("Variable for domain: %s" % str(key))
-                self.__variables[field.name]['data_provider'] = VarDataProvider(field.d[key])
+                self.logger.debug("Variable for domain: %s" % str(key))
+                self.__variables[field.name]['domain_number'][key] = field.partition.domain_numbers[key]
+                self.__variables[field.name]['data_provider'][key] = VarDataProvider(field.d[key])
 
     @property
     def meshes(self):
