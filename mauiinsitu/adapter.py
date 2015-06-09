@@ -65,7 +65,7 @@ class InSituDataAdapter(object):
                 self.__meshes[mesh_name]['data_provider'] = dict()
                 self.__meshes[mesh_name]['domain_number'] = dict()
 
-            self.__meshes[mesh_name]['number_of_domains'] = len(field.partition.domains)
+            self.__meshes[mesh_name]['number_of_domains'] = len(field.partition.meta_data)
 
             for key in field.d:
                 self.logger.debug("Mesh for domain: %s" % str(key))
